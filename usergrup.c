@@ -468,4 +468,82 @@ void mkUser(char *idP, char *usr, char *pwd,char *gname){
 }
 
 
+
+void rmvUser(char *idP, char *usr){
+    if(logueado == 1){
+        if(strcasecmp(usuario, "root") == 0){
+            char *ruta;
+            int i = 0;
+            ruta = malloc(200);
+            strcpy(ruta, buscarRutaArchivo(idP));
+            int id_particion = getIdParticion(idP);
+            FILE *leer = fopen(ruta, "rb+");
+            MBR auxMBR;
+            int inicio = sizeof(MBR);
+            if (leer) { //Archivo existente
+                fseek(leer, 0, SEEK_SET);
+                fread(&auxMBR, sizeof (MBR), 1, leer);
+                for (i = 0; i < 4; i++) {
+                    if (auxMBR.mbr_particion[i].part_id == id_particion) {
+                        i = 4;
+                        int byte_inicio = inicio;
+                        SpB auxSB;
+                        fseek(leer, byte_inicio, SEEK_SET);
+                        fread(&auxSB, sizeof(SpB), 1, leer);
+                        //printf("\nAlgo: %d\n", auxSB.sb_arbol_virtual_count);
+                        int ibd;
+                        ibd = auxSB.sb_ap_bloques;
+                        //printf("\n<!> INFO: ibk: %d", ibd);
+                        int noEs = auxSB.sb_bloques_count;
+                        BD bDatos[noEs];
+                        fseek(leer, ibd, SEEK_SET);
+                        fread(&bDatos, noEs * sizeof(BD), 1, leer);
+
+                        char auxData[25];
+                        strcpy(auxData, bDatos[0].db_data);
+                        SplitLinea(auxData);
+                        printf("\n<!> INFO: Datos0: %s", bDatos[0].db_data);
+                        int ci = 0;
+                        int existe = 0;
+                        int noG = 0;
+                        for(ci = 0; ci < ncont; ci++){
+                            if(listaU[ci] != NULL){
+                                //printf("\nLista U1: %s\n", listaU[0]);
+                                SplitComa(listaU[ci]);
+                                //printf("\nLista U2: %s\n", listaU[0]);
+                                if(strcasecmp(subListaU[1], "U") == 0){
+                                    if(strcasecmp(subListaU[3], usr) == 0){
+                                        strcpy(subListaU[0], "0");
+                                        printf("\nUsuario encontrado, preparandose para eliminar...");
+                                        auxRmv = ci;
+                                        strcpy(auxData, bDatos[0].db_data);
+                                        actualizarGrupo(auxData);
+                                        //ci == 8;
+                                        existe = 1;
+                                        //printf("\nResultado:\n%s\n", auxD);
+                                        strcpy(bDatos[0].db_data, auxD);
+                                        fseek(leer, ibd, SEEK_SET);
+                                        fwrite(&bDatos, noEs * sizeof(BD), 1, leer);
+                                    }
+                                }
+                            }
+                        }
+                        if(existe == 0){
+                            printf("\n<E> ERROR: Grupo no encontrado.");
+                        }
+                        limpiarListas();
+                    }
+                }
+                fclose(leer);
+            }
+        }else{
+            printf("\n<E> ERROR: No posee permisos de administrador.");
+        }
+    }else{
+        printf("\n<E> ERROR: No hay sesion iniciada.");
+    }
+}
+
+
+
 #endif // USERGROUP_H
