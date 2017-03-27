@@ -517,7 +517,7 @@ void rmvUser(char *idP, char *usr){
                                         printf("\nUsuario encontrado, preparandose para eliminar...");
                                         auxRmv = ci;
                                         strcpy(auxData, bDatos[0].db_data);
-                                        actualizarGrupo(auxData);
+                                        actualizarGrupo(auxData);//Parte por cambiar, agregar un nuevo metodo para actualizar el usuario eliminado
                                         //ci == 8;
                                         existe = 1;
                                         //printf("\nResultado:\n%s\n", auxD);
